@@ -2,122 +2,756 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2196F3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Maaser Tracker">
 <title>Maaser Tracker</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232196F3'/%3E%3Cpath fill='white' d='M16 8.2c-1.1-1.4-3-2.2-4.8-2.2C8.2 6 6 8.2 6 11c0 4.1 3.6 7.4 9 12.2l1 0.9 1-0.9c5.4-4.8 9-8.1 9-12.2 0-2.8-2.2-5-5.2-5-1.8 0-3.7.8-4.8 2.2z'/%3E%3C/svg%3E">
 <style>
-:root{--bg:#f6f7f9;--card:#fff;--text:#1b1f24;--muted:#6b7280;--border:#e5e7eb;--accent:#2563eb;--good:#059669;--bad:#dc2626}
-@media (prefers-color-scheme:dark){:root{--bg:#0f1115;--card:#181b21;--text:#e8eaed;--muted:#9aa0a6;--border:#2a2e36;--accent:#60a5fa;--good:#34d399;--bad:#f87171}}
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
-.wrap{max-width:880px;margin:0 auto;padding:20px 16px 60px}
-h1{font-size:26px;margin:8px 0 4px}p.sub{color:var(--muted);margin:0 0 20px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
-.stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px}
-.stat .l{font-size:13px;color:var(--muted)}.stat .v{font-size:24px;font-weight:650;margin-top:4px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px}
-.card h2{font-size:17px;margin:0 0 12px}
-.row{display:flex;flex-wrap:wrap;gap:8px}
-input,select,button{font:inherit;padding:9px 11px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text)}
-input{flex:1 1 140px;min-width:0}button{cursor:pointer}
-button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-.tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}.tabs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:9px 6px;border-bottom:1px solid var(--border);text-align:left}
-td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}.inc{color:var(--good)}.don{color:var(--accent)}
-.x{border:none;background:none;color:var(--muted);padding:2px 6px}.x:hover{color:var(--bad)}
-.bar{height:10px;background:var(--border);border-radius:6px;overflow:hidden;margin-top:10px}.bar>div{height:100%;background:var(--good)}
-.muted{color:var(--muted);font-size:13px}.empty{color:var(--muted);text-align:center;padding:18px}
+:root{
+  --bar:#2196F3;--card-blue:#1565C0;--accent:#1E88E5;
+  --earned:#2E9B4F;--earned-bg:#E8F6EC;--gave:#1E88E5;--gave-bg:#E3F2FD;
+  --prepaid:#4ADE80;--bg:#F0F2F5;--card:#fff;--text:#212121;--muted:#757575;
+  --line:#ECEFF1;--danger:#D32F2F;--shadow:0 2px 8px rgba(0,0,0,.12);
+  --radius:20px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#121212;--card:#1E1E1E;--text:#EEE;--muted:#A0A0A0;--line:#2C2C2C;
+    --earned-bg:#14301C;--gave-bg:#0D2A44;--shadow:0 2px 8px rgba(0,0,0,.4);
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
+  font-family:Roboto,system-ui,-apple-system,Segoe UI,sans-serif}
+body{padding-top:56px;padding-bottom:24px;padding-bottom:max(24px,env(safe-area-inset-bottom))}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+
+.appbar{position:fixed;top:0;left:0;right:0;z-index:20;height:56px;
+  display:flex;align-items:center;gap:8px;padding:0 4px 0 4px;
+  padding-top:env(safe-area-inset-top);height:calc(56px + env(safe-area-inset-top));
+  background:var(--bar);color:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2)}
+.appbar h1{font-size:20px;font-weight:500;margin:0;letter-spacing:.2px}
+.icon-btn{border:0;background:transparent;width:48px;height:48px;border-radius:24px;
+  display:grid;place-items:center;color:inherit;flex:0 0 48px}
+.icon-btn:active{background:rgba(255,255,255,.15)}
+
+.page{max-width:560px;margin:0 auto;padding:16px 14px 40px}
+
+.status{background:var(--card-blue);color:#fff;border-radius:var(--radius);
+  padding:22px 20px 20px;text-align:center;box-shadow:var(--shadow);margin-bottom:14px}
+.status-label{font-size:16px;font-weight:400;opacity:.95}
+.status-amt{font-size:44px;font-weight:600;letter-spacing:-.5px;margin-top:6px;line-height:1.15}
+.status.prepaid .status-amt{color:var(--prepaid)}
+.status.ok .status-amt{color:#fff}
+.status-sub{font-size:13px;opacity:.85;margin-top:6px}
+
+.card{background:var(--card);border-radius:var(--radius);padding:16px 16px 18px;
+  box-shadow:var(--shadow);margin-bottom:14px}
+.card h2{font-size:16px;font-weight:600;margin:0 0 14px}
+
+.toggles{display:flex;gap:14px;margin-bottom:18px}
+.tog{width:88px;height:88px;border-radius:16px;border:2px solid transparent;
+  background:#F3F4F6;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;color:var(--muted);font-size:13px;font-weight:500;padding:0}
+@media (prefers-color-scheme:dark){.tog{background:#2A2A2A}}
+.tog svg{width:28px;height:28px}
+.tog.earned.on{border-color:var(--earned);background:var(--earned-bg);color:var(--earned)}
+.tog.gave.on{border-color:var(--gave);background:var(--gave-bg);color:var(--gave)}
+.tog.earned:not(.on) svg{color:var(--earned);opacity:.85}
+.tog.gave:not(.on) svg{color:var(--gave);opacity:.85}
+
+.amt-row{display:flex;align-items:center;gap:8px;min-height:56px}
+.amt-label{font-size:18px;color:var(--text);white-space:nowrap}
+.amt-sym{font-size:22px;font-weight:500}
+#fAmt{flex:1;min-width:0;border:0;border-bottom:2px solid var(--accent);background:transparent;
+  font-size:28px;font-weight:500;padding:6px 4px;outline:none;border-radius:0;
+  font-variant-numeric:tabular-nums}
+#fAmt::placeholder{color:#B0B0B0;font-weight:400}
+#fAmt:focus{border-bottom-width:3px}
+.check{width:52px;height:52px;border-radius:50%;border:2px solid var(--accent);
+  background:transparent;color:var(--accent);display:grid;place-items:center;flex:0 0 52px;padding:0}
+.check.on{background:var(--accent);color:#fff}
+.check:disabled{opacity:.4}
+.check svg{width:28px;height:28px}
+
+.opts{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.opts label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.opts input{border:0;border-bottom:1px solid var(--line);background:transparent;
+  padding:6px 2px;font-size:15px;outline:none;border-radius:0;color:var(--text)}
+.opts input:focus{border-bottom-color:var(--accent)}
+
+#list{display:flex;flex-direction:column}
+.row{display:flex;align-items:flex-start;gap:12px;padding:14px 4px;border:0;background:transparent;
+  width:100%;text-align:left;border-bottom:1px solid var(--line);border-radius:0}
+.row:last-child{border-bottom:0}
+.row:active{background:rgba(0,0,0,.04)}
+.ico{width:36px;height:36px;border-radius:18px;display:grid;place-items:center;flex:0 0 36px;margin-top:2px}
+.ico svg{width:20px;height:20px}
+.ico.inc{background:var(--earned-bg);color:var(--earned)}
+.ico.don{background:var(--gave-bg);color:var(--gave)}
+.mid{flex:1;min-width:0}
+.ttl{display:block;font-weight:700;font-size:15px;line-height:1.25}
+.ttl.inc{color:var(--earned)}.ttl.don{color:var(--gave)}
+.desc{display:block;font-size:13px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dt{font-size:12px;color:var(--muted);white-space:nowrap;padding-top:2px}
+.empty{color:var(--muted);text-align:center;padding:20px 8px;font-size:14px}
+
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:30;border:0;padding:0;margin:0}
+.drawer{position:fixed;top:0;left:0;bottom:0;width:min(86vw,340px);background:var(--card);z-index:40;
+  transform:translateX(-105%);transition:transform .22s ease;overflow:auto;
+  padding:calc(12px + env(safe-area-inset-top)) 0 32px;box-shadow:4px 0 16px rgba(0,0,0,.2);color:var(--text)}
+.drawer.open{transform:translateX(0)}
+.drawer-head{padding:8px 20px 16px;border-bottom:1px solid var(--line)}
+.drawer-head h2{margin:0;font-size:20px;font-weight:500}
+.drawer-head p{margin:4px 0 0;font-size:13px;color:var(--muted)}
+.dsec{padding:16px 20px 8px;font-size:12px;font-weight:600;letter-spacing:.6px;color:var(--muted);text-transform:uppercase}
+.drow{padding:0 20px 12px}
+.drow label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+.drow select,.drow input{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 12px}
+.totals{margin:0 20px 8px;background:var(--bg);border-radius:12px;padding:12px 14px}
+.tot{display:flex;justify-content:space-between;gap:8px;padding:6px 0;font-size:14px}
+.tot span:last-child{font-weight:600;font-variant-numeric:tabular-nums}
+.dact{display:block;width:calc(100% - 40px);margin:8px 20px;padding:12px 14px;border:0;border-radius:10px;
+  background:var(--bg);text-align:left;font-size:15px}
+.dact:active{filter:brightness(.95)}
+.dact.primary{background:var(--accent);color:#fff}
+.sync-note{margin:8px 20px 0;font-size:12px;color:var(--muted);line-height:1.4}
+.sync-status{margin:0 20px 8px;font-size:13px}
+
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--card);
+  border-radius:20px 20px 0 0;padding:12px 18px calc(18px + env(safe-area-inset-bottom));
+  box-shadow:0 -8px 24px rgba(0,0,0,.2);max-height:92vh;overflow:auto;
+  transform:translateY(110%);transition:transform .22s ease}
+.sheet.open{transform:translateY(0)}
+.sheet h3{margin:4px 0 14px;text-align:center;font-size:18px;font-weight:600}
+.handle{width:36px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 10px}
+.sheet .toggles{justify-content:center}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+.field input,.field select{width:100%;border:1px solid var(--line);background:var(--bg);
+  border-radius:10px;padding:10px 12px;font-size:16px}
+.sheet-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.sheet-acts button{flex:1;min-width:90px;padding:12px;border-radius:24px;border:0;font-weight:500}
+.btn-save{background:var(--accent);color:#fff}
+.btn-cancel{background:var(--bg)}
+.btn-del{background:transparent;color:var(--danger);flex:1 1 100%;order:3}
+
+body.locked{overflow:hidden}
+#impFile{display:none}
 </style>
 </head>
 <body>
-<div class="wrap">
+<header class="appbar">
+  <button class="icon-btn" id="menuBtn" aria-label="Open menu" type="button">
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/></svg>
+  </button>
   <h1>Maaser Tracker</h1>
-  <p class="sub">Log your income and tzedakah. It works out what you owe and what's left to give.</p>
+</header>
 
-  <div class="stats">
-    <div class="stat"><div class="l">Total income</div><div class="v" id="sIncome">0</div></div>
-    <div class="stat"><div class="l">Maaser owed (<span id="sPct">10</span>%)</div><div class="v" id="sOwed">0</div></div>
-    <div class="stat"><div class="l">Given so far</div><div class="v" id="sGiven">0</div></div>
-    <div class="stat"><div class="l" id="sBalLabel">Still to give</div><div class="v" id="sBal">0</div></div>
-  </div>
-  <div class="card" style="padding:12px 16px">
-    <div class="muted" id="progText"></div>
-    <div class="bar"><div id="prog" style="width:0%"></div></div>
-  </div>
+<main class="page">
+  <section class="status" id="statusCard">
+    <div class="status-label" id="balLabel">You currently owe maaser</div>
+    <div class="status-amt" id="balAmt">$0.00</div>
+    <div class="status-sub" id="balSub" hidden></div>
+  </section>
 
-  <div class="card">
-    <h2>Add an entry</h2>
-    <div class="tabs"><button id="tInc" class="on">Income</button><button id="tDon">Donation</button></div>
-    <div class="row">
-      <input type="date" id="fDate">
-      <input type="text" id="fDesc" placeholder="Source, e.g. Paycheck">
-      <input type="number" id="fAmt" placeholder="Amount" min="0" step="0.01" inputmode="decimal">
-      <button class="primary" id="addBtn">Add</button>
+  <section class="card entry-card">
+    <h2>New entry</h2>
+    <div class="toggles">
+      <button type="button" class="tog earned on" id="btnEarned">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 6H4c-1.11 0-2 .89-2 2v8c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm0 10H4V8h16v8z"/><circle cx="12" cy="12" r="2.15"/><circle cx="6.5" cy="12" r="1"/><circle cx="17.5" cy="12" r="1"/></svg>
+        Earned
+      </button>
+      <button type="button" class="tog gave" id="btnGave">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.5 4.5c-1.54 0-2.95.74-3.85 1.9C11.75 5.24 10.34 4.5 8.8 4.5 6.37 4.5 4.5 6.4 4.5 8.75c0 3.22 2.86 5.84 7.16 9.76l.64.57.64-.57c4.3-3.92 7.16-6.54 7.16-9.76 0-2.35-1.87-4.25-4.3-4.25z"/><path d="M3.5 14.7c0-1.1.9-2 2-2h5.8c.3 0 .58.12.79.33l.7.7c.172.16.1.2.2.47h1.9c.7 0 1.3.6 1.3 1.3s-.6 1.3-1.3 1.3h-2.7l-.7.7c-.3.3-.7.5-1.12.5H7.4L4.4 20.3a.75.75 0 0 1-1.05-1.07L5.3 17.8H5.5c-1.1 0-2-.9-2-2v-1.1z"/></svg>
+        Gave
+      </button>
     </div>
+    <div class="amt-row">
+      <span class="amt-label" id="amtLabel">I earned</span>
+      <span class="amt-sym" id="sym">$</span>
+      <input id="fAmt" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" aria-label="Amount">
+      <button type="button" class="check" id="addBtn" aria-label="Save entry" disabled>
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+      </button>
+    </div>
+    <div class="opts">
+      <label>Date
+        <input type="date" id="fDate">
+      </label>
+      <label>Description (optional)
+        <input type="text" id="fDesc" placeholder="Paycheck, shul, …" autocomplete="off">
+      </label>
+    </div>
+  </section>
+
+  <section class="card activity-card">
+    <h2>Recent activity</h2>
+    <div id="list"></div>
+  </section>
+</main>
+
+<button type="button" class="backdrop" id="backdrop" hidden aria-label="Close menu"></button>
+<nav class="drawer" id="drawer" aria-hidden="true">
+  <div class="drawer-head">
+    <h2>Maaser Tracker</h2>
+    <p>Data stays on this phone unless cloud sync is turned on.</p>
   </div>
 
-  <div class="card">
-    <h2>History</h2>
-    <div class="tabs" id="filt"><button data-f="all" class="on">All</button><button data-f="income">Income</button><button data-f="donation">Donations</button>
-      <select id="yearSel" style="margin-left:auto"></select></div>
-    <div style="overflow-x:auto"><table><thead><tr><th>Date</th><th>Type</th><th>Description</th><th class="n">Amount</th><th></th></tr></thead><tbody id="list"></tbody></table></div>
+  <div class="dsec">Settings</div>
+  <div class="drow">
+    <label for="pct">Percentage</label>
+    <select id="pct">
+      <option value="10">10% (maaser)</option>
+      <option value="20">20% (chomesh)</option>
+    </select>
+  </div>
+  <div class="drow">
+    <label for="cur">Currency</label>
+    <select id="cur">
+      <option>USD</option><option>ILS</option><option>GBP</option><option>EUR</option><option>CAD</option><option>AUD</option>
+    </select>
   </div>
 
-  <div class="card">
-    <h2>Settings & backup</h2>
-    <div class="row" style="align-items:center">
-      <label class="muted">Percentage</label>
-      <select id="pct"><option value="10">10% (maaser)</option><option value="20">20% (chomesh)</option></select>
-      <label class="muted">Currency</label>
-      <select id="cur"><option>USD</option><option>ILS</option><option>GBP</option><option>EUR</option><option>CAD</option><option>AUD</option></select>
-    </div>
-    <div class="row" style="margin-top:12px">
-      <button id="expCsv">Export CSV</button><button id="expJson">Back up (JSON)</button>
-      <button id="impBtn">Restore backup</button><input type="file" id="impFile" accept=".json" style="display:none">
-    </div>
-    <p class="muted">Your data stays on this device in this browser. Back up now and then so you don't lose it.</p>
+  <div class="dsec">Totals</div>
+  <div class="totals">
+    <div class="tot"><span>Total earned</span><span id="sIncome">$0.00</span></div>
+    <div class="tot"><span>Total maaser owed</span><span id="sOwed">$0.00</span></div>
+    <div class="tot"><span>Total given</span><span id="sGiven">$0.00</span></div>
+  </div>
+
+  <div class="dsec">Year filter</div>
+  <div class="drow">
+    <label for="yearSel">Show activity for</label>
+    <select id="yearSel"></select>
+  </div>
+
+  <div class="dsec">Backup</div>
+  <button type="button" class="dact" id="expCsv">Export CSV</button>
+  <button type="button" class="dact" id="expJson">Download backup</button>
+  <button type="button" class="dact" id="impBtn">Restore backup</button>
+  <p class="sync-note">Restore replaces all data on this device. Download a backup first if you are unsure.</p>
+
+  <div id="syncSection">
+    <div class="dsec">Cloud sync</div>
+    <p class="sync-status" id="syncStatus">Not configured. Entries are saved only on this phone.</p>
+    <button type="button" class="dact primary" id="syncSignIn" hidden>Sign in with Google</button>
+    <button type="button" class="dact" id="syncSignOut" hidden>Sign out</button>
+    <button type="button" class="dact" id="syncShare" hidden>Create read-only share link</button>
+    <p class="sync-note" id="shareUrl" hidden></p>
+  </div>
+</nav>
+
+<button type="button" class="backdrop" id="editBackdrop" hidden aria-label="Close editor"></button>
+<div class="sheet" id="editSheet" role="dialog" aria-labelledby="editTitle" aria-modal="true" hidden>
+  <div class="handle"></div>
+  <h3 id="editTitle">Edit entry</h3>
+  <div class="toggles">
+    <button type="button" class="tog earned" id="eEarned">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 6H4c-1.11 0-2 .89-2 2v8c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm0 10H4V8h16v8z"/><circle cx="12" cy="12" r="2.15"/><circle cx="6.5" cy="12" r="1"/><circle cx="17.5" cy="12" r="1"/></svg>
+      Earned
+    </button>
+    <button type="button" class="tog gave" id="eGave">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.5 4.5c-1.54 0-2.95.74-3.85 1.9C11.75 5.24 10.34 4.5 8.8 4.5 6.37 4.5 4.5 6.4 4.5 8.75c0 3.22 2.86 5.84 7.16 9.76l.64.57.64-.57c4.3-3.92 7.16-6.54 7.16-9.76 0-2.35-1.87-4.25-4.3-4.25z"/><path d="M3.5 14.7c0-1.1.9-2 2-2h5.8c.3 0 .58.12.79.33l.7.7c.172.16.1.2.2.47h1.9c.7 0 1.3.6 1.3 1.3s-.6 1.3-1.3 1.3h-2.7l-.7.7c-.3.3-.7.5-1.12.5H7.4L4.4 20.3a.75.75 0 0 1-1.05-1.07L5.3 17.8H5.5c-1.1 0-2-.9-2-2v-1.1z"/></svg>
+      Gave
+    </button>
+  </div>
+  <div class="field"><label for="eAmt">Amount</label><input id="eAmt" type="text" inputmode="decimal" autocomplete="off"></div>
+  <div class="field"><label for="eDate">Date</label><input id="eDate" type="date"></div>
+  <div class="field"><label for="eDesc">Description</label><input id="eDesc" type="text" autocomplete="off"></div>
+  <div class="sheet-acts">
+    <button type="button" class="btn-save" id="eSave">Save</button>
+    <button type="button" class="btn-cancel" id="eCancel">Cancel</button>
+    <button type="button" class="btn-del" id="eDelete">Delete</button>
   </div>
 </div>
+<input type="file" id="impFile" accept=".json,application/json">
+
 <script>
-const KEY='maaser-tracker-v1';
-let st=JSON.parse(localStorage.getItem(KEY)||'null')||{entries:[],pct:10,cur:'USD'};
-let mode='income',filter='all',year='all';
-const $=id=>document.getElementById(id);
-const save=()=>localStorage.setItem(KEY,JSON.stringify(st));
-const fmt=n=>new Intl.NumberFormat(undefined,{style:'currency',currency:st.cur}).format(n);
-$('fDate').value=new Date().toISOString().slice(0,10);
-$('pct').value=st.pct;$('cur').value=st.cur;
-function setMode(m){mode=m;$('tInc').classList.toggle('on',m==='income');$('tDon').classList.toggle('on',m==='donation');
-  $('fDesc').placeholder=m==='income'?'Source, e.g. Paycheck':'Recipient, e.g. Local shul';}
-$('tInc').onclick=()=>setMode('income');$('tDon').onclick=()=>setMode('donation');
-function add(){const a=parseFloat($('fAmt').value);if(!(a>0)){$('fAmt').focus();return;}
-  st.entries.push({id:Date.now()+Math.random(),type:mode,date:$('fDate').value||new Date().toISOString().slice(0,10),desc:$('fDesc').value.trim(),amt:a});
-  save();$('fAmt').value='';$('fDesc').value='';render();}
-$('addBtn').onclick=add;['fAmt','fDesc'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key==='Enter')add();}));
-$('filt').querySelectorAll('button').forEach(b=>b.onclick=()=>{filter=b.dataset.f;$('filt').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));render();});
-$('yearSel').onchange=e=>{year=e.target.value;render();};
-$('pct').onchange=e=>{st.pct=+e.target.value;save();render();};
-$('cur').onchange=e=>{st.cur=e.target.value;save();render();};
-function del(id){if(confirm('Delete this entry?')){st.entries=st.entries.filter(e=>e.id!==id);save();render();}}
-function dl(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();}
-$('expCsv').onclick=()=>dl('maaser.csv','Date,Type,Description,Amount\n'+st.entries.map(e=>[e.date,e.type,'"'+(e.desc||'').replace(/"/g,'""')+'"',e.amt].join(',')).join('\n'),'text/csv');
-$('expJson').onclick=()=>dl('maaser-backup.json',JSON.stringify(st,null,2),'application/json');
-$('impBtn').onclick=()=>$('impFile').click();
-$('impFile').onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{try{const d=JSON.parse(t);if(!Array.isArray(d.entries))throw 0;if(confirm('Replace your current data with this backup?')){st=d;save();$('pct').value=st.pct;$('cur').value=st.cur;render();}}catch{alert('That file is not a valid backup.');}});};
-function render(){
-  const years=[...new Set(st.entries.map(e=>e.date.slice(0,4)))].sort().reverse();
-  $('yearSel').innerHTML='<option value="all">All years</option>'+years.map(y=>`<option ${y===year?'selected':''}>${y}</option>`).join('');
-  const inYear=st.entries.filter(e=>year==='all'||e.date.startsWith(year));
-  const inc=inYear.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
-  const giv=inYear.filter(e=>e.type==='donation').reduce((s,e)=>s+e.amt,0);
-  const owed=inc*st.pct/100,bal=owed-giv;
-  $('sPct').textContent=st.pct;$('sIncome').textContent=fmt(inc);$('sOwed').textContent=fmt(owed);$('sGiven').textContent=fmt(giv);
-  $('sBalLabel').textContent=bal>=0?'Still to give':'Given ahead (credit)';$('sBal').textContent=fmt(Math.abs(bal));
-  $('sBal').style.color=bal>0?'var(--bad)':'var(--good)';
-  const p=owed>0?Math.min(100,giv/owed*100):(giv>0?100:0);$('prog').style.width=p+'%';
-  $('progText').textContent=owed>0?`You've given ${Math.round(giv/owed*100)}% of your maaser${year==='all'?'':' for '+year}.`:'Add income to see your maaser.';
-  const rows=inYear.filter(e=>filter==='all'||e.type===filter).sort((a,b)=>b.date.localeCompare(a.date));
-  $('list').innerHTML=rows.length?rows.map(e=>`<tr><td>${e.date}</td><td class="${e.type==='income'?'inc':'don'}">${e.type==='income'?'Income':'Donation'}</td><td>${(e.desc||'').replace(/</g,'&lt;')}</td><td class="n">${fmt(e.amt)}</td><td><button class="x" onclick="del(${e.id})" title="Delete">✕</button></td></tr>`).join(''):'<tr><td colspan="5" class="empty">Nothing logged yet.</td></tr>';
+/* ===== Cloud sync (optional) =====
+   Data always saves first to localStorage under key 'maaser-tracker-v1'
+   with shape {entries:[{id,type:'income'|'donation',date,desc,amt}],pct,cur}.
+   To enable cross-device sync, create a free Firebase project, paste the
+   web-app config below, set enabled:true, then republish this file.
+   Leave enabled:false until that config is in place — the app works offline.
+*/
+const SYNC_CONFIG = {
+  enabled: true,
+  apiKey: 'AIzaSyCHAmnB3DemDTq7wYKfkVP7ToWPTu0QdNE',
+  authDomain: 'maaser-tracker-99cc5.firebaseapp.com',
+  projectId: 'maaser-tracker-99cc5',
+  storageBucket: 'maaser-tracker-99cc5.firebasestorage.app',
+  messagingSenderId: '976965271504',
+  appId: '1:976965271504:web:653a65f2f143d623cd03d5'
+};
+const FB_VER = '11.6.0';
+
+const KEY = 'maaser-tracker-v1';
+const SYNC_META_KEY = 'maaser-tracker-v1-sync';
+const ICO_CASH = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 6H4c-1.11 0-2 .89-2 2v8c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm0 10H4V8h16v8z"/><circle cx="12" cy="12" r="2.15"/><circle cx="6.5" cy="12" r="1"/><circle cx="17.5" cy="12" r="1"/></svg>';
+const ICO_HEART = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.5 4.5c-1.54 0-2.95.74-3.85 1.9C11.75 5.24 10.34 4.5 8.8 4.5 6.37 4.5 4.5 6.4 4.5 8.75c0 3.22 2.86 5.84 7.16 9.76l.64.57.64-.57c4.3-3.92 7.16-6.54 7.16-9.76 0-2.35-1.87-4.25-4.3-4.25z"/></svg>';
+
+let st = loadState();
+let mode = 'income';
+let year = 'all';
+let editId = null;
+let editType = 'income';
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+};
+const round2 = n => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+const fmt = n => new Intl.NumberFormat(undefined, {style:'currency', currency:st.cur || 'USD'}).format(round2(n || 0));
+const fmtDate = iso => {
+  if (!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return `${+m}/${+d}/${String(y).slice(-2)}`;
+};
+const curSym = () => {
+  try {
+    const p = new Intl.NumberFormat(undefined,{style:'currency',currency:st.cur||'USD'}).formatToParts(0);
+    return (p.find(x => x.type === 'currency') || {}).value || '$';
+  } catch { return '$'; }
+};
+function loadState(){
+  try {
+    const d = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (d && Array.isArray(d.entries)) {
+      return {entries:d.entries, pct: d.pct === 20 ? 20 : 10, cur: d.cur || 'USD'};
+    }
+  } catch {}
+  return {entries:[], pct:10, cur:'USD'};
 }
+function publicState(){
+  return {entries: st.entries, pct: st.pct, cur: st.cur};
+}
+function save(){
+  localStorage.setItem(KEY, JSON.stringify(publicState()));
+  Sync.push(publicState());
+}
+
+function setMode(m){
+  mode = m;
+  $('btnEarned').classList.toggle('on', m === 'income');
+  $('btnGave').classList.toggle('on', m === 'donation');
+  $('amtLabel').textContent = m === 'income' ? 'I earned' : 'I gave';
+}
+function parseAmt(v){
+  const n = parseFloat(String(v || '').replace(/,/g, '').trim());
+  return n > 0 ? round2(n) : 0;
+}
+function refreshCheck(){
+  const ok = parseAmt($('fAmt').value) > 0;
+  $('addBtn').disabled = !ok;
+  $('addBtn').classList.toggle('on', ok);
+}
+
+function add(){
+  const amt = parseAmt($('fAmt').value);
+  if (!(amt > 0)) { $('fAmt').focus(); return; }
+  st.entries.push({
+    id: Date.now(),
+    type: mode,
+    date: $('fDate').value || today(),
+    desc: $('fDesc').value.trim(),
+    amt
+  });
+  save();
+  $('fAmt').value = '';
+  $('fDesc').value = '';
+  refreshCheck();
+  render();
+}
+
+function openEdit(id){
+  const e = st.entries.find(x => String(x.id) === String(id));
+  if (!e) return;
+  editId = e.id;
+  editType = e.type;
+  $('eEarned').classList.toggle('on', e.type === 'income');
+  $('eGave').classList.toggle('on', e.type === 'donation');
+  $('eAmt').value = String(e.amt);
+  $('eDate').value = e.date;
+  $('eDesc').value = e.desc || '';
+  $('editBackdrop').hidden = false;
+  $('editSheet').hidden = false;
+  requestAnimationFrame(() => $('editSheet').classList.add('open'));
+  document.body.classList.add('locked');
+}
+function closeEdit(){
+  $('editSheet').classList.remove('open');
+  document.body.classList.remove('locked');
+  setTimeout(() => {
+    if (!$('editSheet').classList.contains('open')) {
+      $('editSheet').hidden = true;
+      $('editBackdrop').hidden = true;
+    }
+  }, 220);
+  editId = null;
+}
+function saveEdit(){
+  const e = st.entries.find(x => String(x.id) === String(editId));
+  if (!e) return closeEdit();
+  const amt = parseAmt($('eAmt').value);
+  if (!(amt > 0)) { $('eAmt').focus(); return; }
+  e.type = editType;
+  e.date = $('eDate').value || e.date;
+  e.desc = $('eDesc').value.trim();
+  e.amt = amt;
+  save();
+  closeEdit();
+  render();
+}
+function deleteEdit(){
+  if (!confirm('Delete this entry?')) return;
+  st.entries = st.entries.filter(x => String(x.id) !== String(editId));
+  save();
+  closeEdit();
+  render();
+}
+
+function openDrawer(){
+  $('backdrop').hidden = false;
+  $('drawer').classList.add('open');
+  $('drawer').setAttribute('aria-hidden','false');
+  document.body.classList.add('locked');
+}
+function closeDrawer(){
+  $('drawer').classList.remove('open');
+  $('drawer').setAttribute('aria-hidden','true');
+  $('backdrop').hidden = true;
+  document.body.classList.remove('locked');
+}
+
+function dl(name, text, type){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], {type}));
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+function render(){
+  $('pct').value = st.pct;
+  $('cur').value = st.cur;
+  $('sym').textContent = curSym();
+
+  const years = [...new Set(st.entries.map(e => (e.date || '').slice(0,4)).filter(Boolean))].sort().reverse();
+  if (year !== 'all' && !years.includes(year)) year = 'all';
+  $('yearSel').innerHTML = '<option value="all">All years</option>' + years.map(y => `<option value="${esc(y)}"${y===year?' selected':''}>${esc(y)}</option>`).join('');
+
+  const inYear = st.entries.filter(e => year === 'all' || (e.date || '').startsWith(year));
+  const inc = round2(inYear.filter(e => e.type === 'income').reduce((s,e) => s + Number(e.amt), 0));
+  const giv = round2(inYear.filter(e => e.type === 'donation').reduce((s,e) => s + Number(e.amt), 0));
+  const owed = round2(inc * st.pct / 100);
+  const bal = round2(owed - giv);
+
+  $('sIncome').textContent = fmt(inc);
+  $('sOwed').textContent = fmt(owed);
+  $('sGiven').textContent = fmt(giv);
+
+  const card = $('statusCard');
+  card.classList.remove('prepaid','ok');
+  const sub = $('balSub');
+  if (year !== 'all') { sub.hidden = false; sub.textContent = 'for ' + year; }
+  else { sub.hidden = true; sub.textContent = ''; }
+
+  if (bal > 0) {
+    $('balLabel').textContent = 'You currently owe maaser';
+    $('balAmt').textContent = fmt(bal);
+  } else if (bal < 0) {
+    card.classList.add('prepaid');
+    $('balLabel').textContent = 'You have prepaid maaser';
+    $('balAmt').textContent = fmt(Math.abs(bal));
+  } else {
+    card.classList.add('ok');
+    $('balLabel').textContent = "You're all caught up";
+    $('balAmt').textContent = fmt(0);
+  }
+
+  const rows = inYear.slice().sort((a,b) => String(b.date).localeCompare(String(a.date)) || (Number(b.id)-Number(a.id)));
+  $('list').innerHTML = rows.length ? rows.map(e => {
+    const isInc = e.type === 'income';
+    return `<button type="button" class="row" data-id="${esc(String(e.id))}">
+      <span class="ico ${isInc?'inc':'don'}">${isInc?ICO_CASH:ICO_HEART}</span>
+      <span class="mid">
+        <span class="ttl ${isInc?'inc':'don'}">${isInc?'Earned':'Gave'} ${esc(fmt(e.amt))}</span>
+        <span class="desc">${esc(e.desc || '')}</span>
+      </span>
+      <span class="dt">${esc(fmtDate(e.date))}</span>
+    </button>`;
+  }).join('') : '<div class="empty">Nothing logged yet.</div>';
+}
+
+/* ===== Isolated sync layer. No-ops until SYNC_CONFIG.enabled is true. ===== */
+const Sync = (() => {
+  let user = null, db = null, auth = null, fb = null, pushTimer = null;
+  const configured = !!(SYNC_CONFIG.enabled && SYNC_CONFIG.apiKey && SYNC_CONFIG.projectId);
+
+  function meta(){
+    try { return JSON.parse(localStorage.getItem(SYNC_META_KEY) || '{}') || {}; }
+    catch { return {}; }
+  }
+  function setMeta(m){ localStorage.setItem(SYNC_META_KEY, JSON.stringify(m)); }
+  function setStatus(msg){
+    const el = $('syncStatus');
+    if (el) el.textContent = msg;
+  }
+  function refreshButtons(){
+    $('syncSignIn').hidden = !configured || !!user;
+    $('syncSignOut').hidden = !configured || !user;
+    $('syncShare').hidden = !configured || !user;
+  }
+
+  async function loadSdk(){
+    if (fb) return fb;
+    const app = await import(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-app.js`);
+    const authMod = await import(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-auth.js`);
+    const fs = await import(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-firestore.js`);
+    fb = { ...app, ...authMod, ...fs };
+    return fb;
+  }
+
+  async function init(){
+    refreshButtons();
+    if (!configured) return;
+    setStatus('Connecting…');
+    try {
+      const f = await loadSdk();
+      const app = f.initializeApp({
+        apiKey: SYNC_CONFIG.apiKey,
+        authDomain: SYNC_CONFIG.authDomain,
+        projectId: SYNC_CONFIG.projectId,
+        appId: SYNC_CONFIG.appId
+      });
+      auth = f.getAuth(app);
+      db = f.getFirestore(app);
+      try { await f.getRedirectResult(auth); } catch (err) { console.warn('redirect', err); }
+      f.onAuthStateChanged(auth, async u => {
+        user = u;
+        refreshButtons();
+        if (!u) { setStatus('Sign in with Google to sync across devices.'); return; }
+        setStatus('Signed in as ' + (u.email || 'Google account') + '. Syncing…');
+        await pullAndMerge();
+        setStatus('Signed in as ' + (u.email || 'Google account') + '. Synced.');
+      });
+    } catch (err) {
+      console.warn(err);
+      setStatus('Cloud sync could not start. Data is still saved on this phone.');
+    }
+  }
+
+  async function pullAndMerge(){
+    if (!user || !db || !fb) return;
+    const ref = fb.doc(db, 'users', user.uid);
+    const snap = await fb.getDoc(ref);
+    const remote = snap.exists() ? snap.data() : null;
+    const m = meta();
+    const localHas = st.entries.length > 0;
+    const remoteHas = !!(remote && Array.isArray(remote.entries) && remote.entries.length);
+    if (remoteHas && !localHas) {
+      applyRemote(remote);
+      return;
+    }
+    if (!remoteHas && localHas) {
+      await pushNow(publicState());
+      return;
+    }
+    if (remoteHas && localHas) {
+      const rAt = Number(remote.updatedAt) || 0;
+      const lAt = Number(m.updatedAt) || 0;
+      if (!lAt && rAt) {
+        const useCloud = confirm('This Google account already has maaser data in the cloud. Use the cloud copy on this phone? Tap Cancel to keep this phone\'s data and upload it instead.');
+        if (useCloud) applyRemote(remote);
+        else await pushNow(publicState());
+        return;
+      }
+      if (rAt > lAt) applyRemote(remote);
+      else await pushNow(publicState());
+    }
+  }
+
+  function applyRemote(remote){
+    st = {
+      entries: remote.entries,
+      pct: remote.pct === 20 ? 20 : 10,
+      cur: remote.cur || 'USD'
+    };
+    localStorage.setItem(KEY, JSON.stringify(publicState()));
+    setMeta({updatedAt: Number(remote.updatedAt) || Date.now(), uid: user && user.uid});
+    render();
+  }
+
+  function push(state){
+    if (!configured || !user) return;
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(() => pushNow(state), 400);
+  }
+
+  async function pushNow(state){
+    if (!configured || !user || !db || !fb) return;
+    const updatedAt = Date.now();
+    try {
+      await fb.setDoc(fb.doc(db, 'users', user.uid), {
+        entries: state.entries,
+        pct: state.pct,
+        cur: state.cur,
+        updatedAt
+      });
+      setMeta({updatedAt, uid: user.uid});
+    } catch (err) {
+      console.warn(err);
+      setStatus('Couldn’t sync just now. Data is still saved on this phone.');
+    }
+  }
+
+  async function signIn(){
+    if (!configured) return;
+    const f = await loadSdk();
+    const provider = new f.GoogleAuthProvider();
+    try {
+      await f.signInWithPopup(auth, provider);
+    } catch (err) {
+      alert('Sign-in did not complete. ' + (err && err.message ? err.message : ''));
+    }
+  }
+  async function signOut(){
+    if (auth && fb) await fb.signOut(auth);
+    user = null;
+    refreshButtons();
+    setStatus('Signed out. Data remains on this phone.');
+  }
+
+  async function makeShareLink(){
+    if (!user || !db || !fb) return;
+    const bytes = new Uint8Array(24);
+    crypto.getRandomValues(bytes);
+    const token = [...bytes].map(b => b.toString(16).padStart(2,'0')).join('');
+    const updatedAt = Date.now();
+    await fb.setDoc(fb.doc(db, 'shares', token), {
+      entries: st.entries, pct: st.pct, cur: st.cur, updatedAt, uid: user.uid, createdAt: updatedAt
+    });
+    const appLink = `${location.origin}${location.pathname}?share=${token}`;
+    const apiLink = `https://firestore.googleapis.com/v1/projects/${SYNC_CONFIG.projectId}/databases/(default)/documents/shares/${token}`;
+    const box = $('shareUrl');
+    box.hidden = false;
+    box.textContent = 'Share this read-only link (anyone who has it can view the current snapshot):\n' + appLink;
+    try { await navigator.clipboard.writeText(appLink); box.textContent += '\nCopied to the clipboard.'; } catch {}
+    box.dataset.api = apiLink;
+    return {appLink, apiLink};
+  }
+
+  async function openShareView(token){
+    if (!SYNC_CONFIG.projectId) return;
+    try {
+      const url = `https://firestore.googleapis.com/v1/projects/${SYNC_CONFIG.projectId}/databases/(default)/documents/shares/${encodeURIComponent(token)}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Share link was not found.');
+      const body = await res.json();
+      const fields = body.fields || {};
+      // Prefer pulling via SDK if configured; REST map is awkward, so also try SDK if already inited.
+      // Fallback: parse a JSON string field if present. We store structured fields via setDoc,
+      // so when SDK is available use it; otherwise show a message to open after config is set.
+      if (configured) {
+        const f = await loadSdk();
+        if (!db) {
+          const app = f.initializeApp({
+            apiKey: SYNC_CONFIG.apiKey,
+            authDomain: SYNC_CONFIG.authDomain,
+            projectId: SYNC_CONFIG.projectId,
+            appId: SYNC_CONFIG.appId
+          });
+          db = f.getFirestore(app);
+        }
+        const snap = await f.getDoc(f.doc(db, 'shares', token));
+        if (snap.exists()) {
+          const d = snap.data();
+          st = {entries:d.entries||[], pct:d.pct===20?20:10, cur:d.cur||'USD'};
+          // Read-only view: do not write this into localStorage.
+          render();
+          document.querySelector('.entry-card').hidden = true;
+          $('menuBtn').hidden = true;
+          $('balSub').hidden = false;
+          $('balSub').textContent = 'Read-only shared snapshot';
+          return;
+        }
+      }
+      if (fields && fields.entries) {
+        alert('This share link needs cloud sync to be configured in the app in order to display.');
+      }
+    } catch (err) {
+      alert('Could not open that share link.');
+      console.warn(err);
+    }
+  }
+
+  return {init, push, signIn, signOut, makeShareLink, openShareView, configured};
+})();
+
+$('fDate').value = today();
+$('btnEarned').onclick = () => setMode('income');
+$('btnGave').onclick = () => setMode('donation');
+$('fAmt').addEventListener('input', refreshCheck);
+$('addBtn').onclick = add;
+['fAmt','fDesc'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') add(); }));
+$('list').addEventListener('click', e => {
+  const row = e.target.closest('.row');
+  if (row) openEdit(row.dataset.id);
+});
+$('eEarned').onclick = () => { editType = 'income'; $('eEarned').classList.add('on'); $('eGave').classList.remove('on'); };
+$('eGave').onclick = () => { editType = 'donation'; $('eGave').classList.add('on'); $('eEarned').classList.remove('on'); };
+$('eSave').onclick = saveEdit;
+$('eCancel').onclick = closeEdit;
+$('editBackdrop').onclick = closeEdit;
+$('eDelete').onclick = deleteEdit;
+$('menuBtn').onclick = openDrawer;
+$('backdrop').onclick = closeDrawer;
+$('pct').onchange = e => { st.pct = +e.target.value === 20 ? 20 : 10; save(); render(); };
+$('cur').onchange = e => { st.cur = e.target.value; save(); render(); };
+$('yearSel').onchange = e => { year = e.target.value; render(); };
+$('expCsv').onclick = () => dl('maaser.csv', 'Date,Type,Description,Amount\n' + st.entries.map(e => [e.date, e.type, '"'+(e.desc||'').replace(/"/g,'""')+'"', e.amt].join(',')).join('\n'), 'text/csv');
+$('expJson').onclick = () => dl('maaser-backup.json', JSON.stringify(publicState(), null, 2), 'application/json');
+$('impBtn').onclick = () => {
+  if (!confirm('Replace your current data with a backup file? This cannot be undone.')) return;
+  $('impFile').click();
+};
+$('impFile').onchange = e => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  f.text().then(t => {
+    try {
+      const d = JSON.parse(t);
+      if (!Array.isArray(d.entries)) throw 0;
+      st = {entries:d.entries, pct: d.pct === 20 ? 20 : 10, cur: d.cur || 'USD'};
+      save();
+      render();
+      closeDrawer();
+    } catch {
+      alert('That file is not a valid backup.');
+    }
+  });
+};
+$('syncSignIn').onclick = () => Sync.signIn();
+$('syncSignOut').onclick = () => Sync.signOut();
+$('syncShare').onclick = () => Sync.makeShareLink().catch(err => alert('Could not create a share link.'));
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (!$('editSheet').hidden) closeEdit();
+    else if ($('drawer').classList.contains('open')) closeDrawer();
+  }
+});
+
 render();
+const shareTok = new URLSearchParams(location.search).get('share');
+if (shareTok) Sync.openShareView(shareTok);
+else Sync.init();
 </script>
 </body>
 </html>
