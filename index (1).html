@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maaser Tracker</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--text:#1b1f24;--muted:#6b7280;--border:#e5e7eb;--accent:#2563eb;--good:#059669;--bad:#dc2626}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1115;--card:#181b21;--text:#e8eaed;--muted:#9aa0a6;--border:#2a2e36;--accent:#60a5fa;--good:#34d399;--bad:#f87171}}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+.wrap{max-width:880px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:26px;margin:8px 0 4px}p.sub{color:var(--muted);margin:0 0 20px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px}
+.stat .l{font-size:13px;color:var(--muted)}.stat .v{font-size:24px;font-weight:650;margin-top:4px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px}
+.card h2{font-size:17px;margin:0 0 12px}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+input,select,button{font:inherit;padding:9px 11px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text)}
+input{flex:1 1 140px;min-width:0}button{cursor:pointer}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}.tabs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:9px 6px;border-bottom:1px solid var(--border);text-align:left}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}.inc{color:var(--good)}.don{color:var(--accent)}
+.x{border:none;background:none;color:var(--muted);padding:2px 6px}.x:hover{color:var(--bad)}
+.bar{height:10px;background:var(--border);border-radius:6px;overflow:hidden;margin-top:10px}.bar>div{height:100%;background:var(--good)}
+.muted{color:var(--muted);font-size:13px}.empty{color:var(--muted);text-align:center;padding:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Maaser Tracker</h1>
+  <p class="sub">Log your income and tzedakah. It works out what you owe and what's left to give.</p>
+
+  <div class="stats">
+    <div class="stat"><div class="l">Total income</div><div class="v" id="sIncome">0</div></div>
+    <div class="stat"><div class="l">Maaser owed (<span id="sPct">10</span>%)</div><div class="v" id="sOwed">0</div></div>
+    <div class="stat"><div class="l">Given so far</div><div class="v" id="sGiven">0</div></div>
+    <div class="stat"><div class="l" id="sBalLabel">Still to give</div><div class="v" id="sBal">0</div></div>
+  </div>
+  <div class="card" style="padding:12px 16px">
+    <div class="muted" id="progText"></div>
+    <div class="bar"><div id="prog" style="width:0%"></div></div>
+  </div>
+
+  <div class="card">
+    <h2>Add an entry</h2>
+    <div class="tabs"><button id="tInc" class="on">Income</button><button id="tDon">Donation</button></div>
+    <div class="row">
+      <input type="date" id="fDate">
+      <input type="text" id="fDesc" placeholder="Source, e.g. Paycheck">
+      <input type="number" id="fAmt" placeholder="Amount" min="0" step="0.01" inputmode="decimal">
+      <button class="primary" id="addBtn">Add</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>History</h2>
+    <div class="tabs" id="filt"><button data-f="all" class="on">All</button><button data-f="income">Income</button><button data-f="donation">Donations</button>
+      <select id="yearSel" style="margin-left:auto"></select></div>
+    <div style="overflow-x:auto"><table><thead><tr><th>Date</th><th>Type</th><th>Description</th><th class="n">Amount</th><th></th></tr></thead><tbody id="list"></tbody></table></div>
+  </div>
+
+  <div class="card">
+    <h2>Settings & backup</h2>
+    <div class="row" style="align-items:center">
+      <label class="muted">Percentage</label>
+      <select id="pct"><option value="10">10% (maaser)</option><option value="20">20% (chomesh)</option></select>
+      <label class="muted">Currency</label>
+      <select id="cur"><option>USD</option><option>ILS</option><option>GBP</option><option>EUR</option><option>CAD</option><option>AUD</option></select>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button id="expCsv">Export CSV</button><button id="expJson">Back up (JSON)</button>
+      <button id="impBtn">Restore backup</button><input type="file" id="impFile" accept=".json" style="display:none">
+    </div>
+    <p class="muted">Your data stays on this device in this browser. Back up now and then so you don't lose it.</p>
+  </div>
+</div>
+<script>
+const KEY='maaser-tracker-v1';
+let st=JSON.parse(localStorage.getItem(KEY)||'null')||{entries:[],pct:10,cur:'USD'};
+let mode='income',filter='all',year='all';
+const $=id=>document.getElementById(id);
+const save=()=>localStorage.setItem(KEY,JSON.stringify(st));
+const fmt=n=>new Intl.NumberFormat(undefined,{style:'currency',currency:st.cur}).format(n);
+$('fDate').value=new Date().toISOString().slice(0,10);
+$('pct').value=st.pct;$('cur').value=st.cur;
+function setMode(m){mode=m;$('tInc').classList.toggle('on',m==='income');$('tDon').classList.toggle('on',m==='donation');
+  $('fDesc').placeholder=m==='income'?'Source, e.g. Paycheck':'Recipient, e.g. Local shul';}
+$('tInc').onclick=()=>setMode('income');$('tDon').onclick=()=>setMode('donation');
+function add(){const a=parseFloat($('fAmt').value);if(!(a>0)){$('fAmt').focus();return;}
+  st.entries.push({id:Date.now()+Math.random(),type:mode,date:$('fDate').value||new Date().toISOString().slice(0,10),desc:$('fDesc').value.trim(),amt:a});
+  save();$('fAmt').value='';$('fDesc').value='';render();}
+$('addBtn').onclick=add;['fAmt','fDesc'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key==='Enter')add();}));
+$('filt').querySelectorAll('button').forEach(b=>b.onclick=()=>{filter=b.dataset.f;$('filt').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));render();});
+$('yearSel').onchange=e=>{year=e.target.value;render();};
+$('pct').onchange=e=>{st.pct=+e.target.value;save();render();};
+$('cur').onchange=e=>{st.cur=e.target.value;save();render();};
+function del(id){if(confirm('Delete this entry?')){st.entries=st.entries.filter(e=>e.id!==id);save();render();}}
+function dl(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();}
+$('expCsv').onclick=()=>dl('maaser.csv','Date,Type,Description,Amount\n'+st.entries.map(e=>[e.date,e.type,'"'+(e.desc||'').replace(/"/g,'""')+'"',e.amt].join(',')).join('\n'),'text/csv');
+$('expJson').onclick=()=>dl('maaser-backup.json',JSON.stringify(st,null,2),'application/json');
+$('impBtn').onclick=()=>$('impFile').click();
+$('impFile').onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{try{const d=JSON.parse(t);if(!Array.isArray(d.entries))throw 0;if(confirm('Replace your current data with this backup?')){st=d;save();$('pct').value=st.pct;$('cur').value=st.cur;render();}}catch{alert('That file is not a valid backup.');}});};
+function render(){
+  const years=[...new Set(st.entries.map(e=>e.date.slice(0,4)))].sort().reverse();
+  $('yearSel').innerHTML='<option value="all">All years</option>'+years.map(y=>`<option ${y===year?'selected':''}>${y}</option>`).join('');
+  const inYear=st.entries.filter(e=>year==='all'||e.date.startsWith(year));
+  const inc=inYear.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
+  const giv=inYear.filter(e=>e.type==='donation').reduce((s,e)=>s+e.amt,0);
+  const owed=inc*st.pct/100,bal=owed-giv;
+  $('sPct').textContent=st.pct;$('sIncome').textContent=fmt(inc);$('sOwed').textContent=fmt(owed);$('sGiven').textContent=fmt(giv);
+  $('sBalLabel').textContent=bal>=0?'Still to give':'Given ahead (credit)';$('sBal').textContent=fmt(Math.abs(bal));
+  $('sBal').style.color=bal>0?'var(--bad)':'var(--good)';
+  const p=owed>0?Math.min(100,giv/owed*100):(giv>0?100:0);$('prog').style.width=p+'%';
+  $('progText').textContent=owed>0?`You've given ${Math.round(giv/owed*100)}% of your maaser${year==='all'?'':' for '+year}.`:'Add income to see your maaser.';
+  const rows=inYear.filter(e=>filter==='all'||e.type===filter).sort((a,b)=>b.date.localeCompare(a.date));
+  $('list').innerHTML=rows.length?rows.map(e=>`<tr><td>${e.date}</td><td class="${e.type==='income'?'inc':'don'}">${e.type==='income'?'Income':'Donation'}</td><td>${(e.desc||'').replace(/</g,'&lt;')}</td><td class="n">${fmt(e.amt)}</td><td><button class="x" onclick="del(${e.id})" title="Delete">✕</button></td></tr>`).join(''):'<tr><td colspan="5" class="empty">Nothing logged yet.</td></tr>';
+}
+render();
+</script>
+</body>
+</html>
